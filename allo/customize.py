@@ -997,7 +997,7 @@ class Schedule:
             )
         raise NotImplementedError(f"Target {target} is not supported")
 
-
+# mlir的代码生成
 def customize(
     fn: Union[Callable, str],
     verbose: bool = False,

@@ -23,6 +23,10 @@ from ..customize import customize
 from ..ir.types import float32
 
 
+# 主要做如下事情：
+# 1. 将pytorch的动态图转换为静态计算图
+# 2. 将Pytorch运算符映射到Allo DSL或自定义硬件加速库
+# 3. 构建MLIR方言
 def from_pytorch(
     model,
     example_inputs,
@@ -45,13 +49,16 @@ def from_pytorch(
     for item in concrete_args.values():
         args.append(item)
 
+    # 动态图追踪
     tracer = AlloTracer(model, concrete_args=concrete_args, leaf_modules=leaf_modules)
     graph = tracer.trace()
     name = (
         model.__class__.__name__
         if isinstance(model, torch.nn.Module)
         else model.__name__
-    )
+    ) 
+
+    # 计算图元数据处理 
     gm = GraphModule(tracer.root, graph, name)
     ShapeProp(gm).propagate(*args)
     if verbose:
@@ -64,10 +71,13 @@ def from_pytorch(
         new_name = "g_" + name.replace(".", "_")
         global_vars.update({new_name: param.detach().numpy()})
 
+    # 生成allo 的dsl
     builder = TorchBuilder(gm, example_inputs, leaf_modules)
     code = builder.build()
     if verbose:
         print(code)
+
+    # 目标代码生成与优化
     s = customize(code, global_vars=global_vars, enable_tensor=enable_tensor)
     # composition
     for func, idx, inst in builder.composition:
@@ -83,7 +93,7 @@ def from_pytorch(
 def get_var_name(node):
     return node.name if isinstance(node, fx.Node) else node
 
-
+# 用访问者模式构建计算图
 class TorchBuilder:
     def __init__(self, gm, example_inputs, leaf_modules=None):
         self.gm = gm
@@ -144,6 +154,7 @@ class TorchBuilder:
 
     def __call__(self, node):
         method = getattr(self, "build_" + node.op)
+        # dispatch到对应的方法去构建中间表示形式
         ret = method(node)
         if ret:
             self.code.append(ret)
@@ -303,6 +314,7 @@ class TorchBuilder:
         inp = get_var_name(node.args[0])
         return f"{node.name} = dsl.softmax({inp})"
 
+    # allo相当于硬编码，做代码生成
     def build_relu(self, node):
         inp = get_var_name(node.args[0])
         shape = tuple(node.meta["tensor_meta"].shape)

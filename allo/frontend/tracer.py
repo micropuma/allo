@@ -76,6 +76,7 @@ class AlloTracer(Tracer):
         """
         if self.leaf_modules:
             for leaf_module in self.leaf_modules:
+            # 判断是否是内置的torch.nn模块
                 if isinstance(m, leaf_module):
                     return True
         return m.__module__.startswith("torch.nn") and not isinstance(

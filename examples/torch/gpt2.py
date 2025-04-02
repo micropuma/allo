@@ -137,5 +137,5 @@ np.testing.assert_allclose(res, golden.detach().numpy(), atol=1e-3)
 print("Test passed!")
 
 # generate HLS module
-mod = allo.frontend.from_pytorch(module, example_inputs=example_inputs, target="vhls")
+mod = allo.frontend.from_pytorch(module, example_inputs=example_inputs, target="aie")
 print(mod.hls_code)
