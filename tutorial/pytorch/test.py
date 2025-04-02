@@ -16,7 +16,8 @@ model.eval()
 
 import allo
 example_inputs = [torch.rand(1, 3, 10, 10), torch.rand(1, 3, 10, 10)]
-llvm_mod = allo.frontend.from_pytorch(model, example_inputs=example_inputs)
+# allo使用torchscript机制，将Pytorch的动态图转换为静态计算图
+llvm_mod = allo.frontend.from_pytorch(model, example_inputs=example_inputs, verbose=True)
 
 golden = model(*example_inputs)
 np_inputs = [x.detach().numpy() for x in example_inputs]
