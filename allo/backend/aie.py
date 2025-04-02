@@ -1642,7 +1642,7 @@ class AIEModule:
             ) as f:
                 f.write(kernel_code)
             path = os.path.join(os.path.dirname(__file__), "aie_kernels")
-            cmd = f"cd {self.project} && $PEANO_INSTALL_DIR/bin/clang++ -O2 -v -std=c++20 --target=aie2-none-unknown-elf -Wno-parentheses -Wno-attributes -Wno-macro-redefined -DNDEBUG -I $(dirname $(which aie-opt))/../include -I $MLIR_AIE_INSTALL_DIR/../aie_kernels/aie2 -c external.cc -o external.o"
+            cmd = f"cd {self.project} && $PEANO_INSTALL_DIR/bin/clang++ -O2 -v -std=c++20 --target=aie2-none-unknown-elf -Wno-parentheses -Wno-attributes -Wno-macro-redefined -DNDEBUG -I/usr/lib/gcc/x86_64-linux-gnu/11/include -I $(dirname $(which aie-opt))/../include -I $MLIR_AIE_INSTALL_DIR/../aie_kernels/aie2 -c external.cc -o external.o"
             process = subprocess.Popen(cmd, shell=True)
             process.wait()
             if process.returncode != 0:
